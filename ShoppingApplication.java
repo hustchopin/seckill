@@ -7,10 +7,12 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 
 @MapperScan(basePackages = {"com.zyw.shopping.dao.mapper"})
 @SpringBootApplication
+@EnableTransactionManagement
 public class ShoppingApplication implements ApplicationRunner {
     @Autowired
     private RedisService redisService;

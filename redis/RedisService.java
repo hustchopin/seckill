@@ -1,5 +1,6 @@
 package com.zyw.shopping.redis;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -16,6 +17,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 @Service
+@Slf4j
+@SuppressWarnings(value = "all")
 public class RedisService {
     /**
      * 库存不足
@@ -158,35 +161,26 @@ public class RedisService {
     public Long decrstock(String key) {
         Jedis jedis = this.getRedisCli();
         jedis.select(1);
-        // 脚本里的KEYS参数
-        List<String> keys = new ArrayList<>();
-        keys.add(key);
+        try {
+            // 脚本里的KEYS参数
+            List<String> keys = new ArrayList<>();
+            keys.add(key);
 //        System.out.println("keys:"+keys);
-        // 脚本里的ARGV参数
-        List<String> args = new ArrayList<>();
+            // 脚本里的ARGV参数
+            List<String> args = new ArrayList<>();
 //        System.out.println(STOCK_LUA);
 
-        long result = redisTemplate.execute(new RedisCallback<Long>() {
-            @Override
-            public Long doInRedis(RedisConnection connection) throws DataAccessException {
-                Object nativeConnection = connection.getNativeConnection();
-//                // 集群模式和单机模式虽然执行脚本的方法一样，但是没有共同的接口，所以只能分开执行
-//                // 集群模式
-//                if (nativeConnection instanceof JedisCluster) {
-//                    return (Long) ((JedisCluster) nativeConnection).eval(STOCK_LUA, keys, args);
-//                }
-//
-//                // 单机模式
-//                else if (nativeConnection instanceof Jedis) {
-//                    return (Long) ((Jedis) nativeConnection).eval(STOCK_LUA, keys, args);
-//                }
-//                return UNINITIALIZED_STOCK;
-                Long eval = (Long)jedis.eval(STOCK_LUA, keys, args);
-                jedis.close();
-                return eval;
-            }
-        });
-        return result;
+            Long result = (Long) jedis.eval(STOCK_LUA, keys, args);
+            return result;
+        }catch (Exception e){
+            log.error("扣减库存失败，错误信息："+e.getMessage());
+            return -1l;
+        }finally {
+            jedis.close();
+
+        }
+
+
     }
 
 }
